@@ -20,6 +20,14 @@
 
 package metadata
 
+/*
+#include "../keyring/fscrypt_uapi.h"
+
+long long fs_ioc_get_encryption_policy_ex_restricted = FS_IOC_GET_ENCRYPTION_POLICY_EX_RESTRICTED;
+
+*/
+import "C"
+
 import (
 	"encoding/hex"
 	"fmt"
@@ -186,6 +194,9 @@ func GetPolicy(path string) (*PolicyData, error) {
 	arg.Size = uint64(unsafe.Sizeof(arg.Policy))
 	policyPtr := util.Ptr(arg.Policy[:])
 	err = getPolicyIoctl(file, unix.FS_IOC_GET_ENCRYPTION_POLICY_EX, unsafe.Pointer(&arg))
+        if err == unix.ERANGE {
+	  err = getPolicyIoctl(file, uintptr(C.fs_ioc_get_encryption_policy_ex_restricted), unsafe.Pointer(&arg))
+	}
 	if err == unix.ENOTTY {
 		// Fall back to the old version of the ioctl. This works for v1 policies only.
 		err = getPolicyIoctl(file, unix.FS_IOC_GET_ENCRYPTION_POLICY, policyPtr)
