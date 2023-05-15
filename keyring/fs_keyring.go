@@ -203,7 +203,7 @@ func fsAddEncryptionKey(key *crypto.Key, descriptor string,
 	}
 	_, _, errno := unix.Syscall(unix.SYS_IOCTL, dir.Fd(),
 		unix.FS_IOC_ADD_ENCRYPTION_KEY, uintptr(argKey.UnsafePtr()))
-	if errno == unix.EOVERFLOW {
+	if errno == unix.ERANGE {
 		_, _, errno = unix.Syscall(unix.SYS_IOCTL, dir.Fd(),
 			uintptr(C.fs_ioc_add_encryption_key64), uintptr(argKey.UnsafePtr()))
 	restorePrivs(savedPrivs)
