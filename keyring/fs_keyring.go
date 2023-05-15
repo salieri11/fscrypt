@@ -197,6 +197,10 @@ func fsAddEncryptionKey(key *crypto.Key, descriptor string,
 	arg.Raw_size = uint32(key.Len())
 	C.memcpy(raw, key.UnsafePtr(), C.size_t(key.Len()))
 
+        // byteArray := *(*[]byte)(unsafe.Pointer(arg))
+        // encodedString := hex.EncodeToString(byteArray)
+        log.Printf("fsAddEncryptionKey %d %q", argKey.Len(), hex.EncodeToString(argKey.Data()))
+
 	savedPrivs, err := dropPrivsIfNeeded(user, &arg.Key_spec)
 	if err != nil {
 		return err
@@ -204,8 +208,10 @@ func fsAddEncryptionKey(key *crypto.Key, descriptor string,
 	_, _, errno := unix.Syscall(unix.SYS_IOCTL, dir.Fd(),
 		unix.FS_IOC_ADD_ENCRYPTION_KEY, uintptr(argKey.UnsafePtr()))
 	if errno == unix.ERANGE {
+		log.Printf("fsAddEncryptionKey64 %d %q", argKey.Len(), hex.EncodeToString(argKey.Data()))
 		_, _, errno = unix.Syscall(unix.SYS_IOCTL, dir.Fd(),
 			uintptr(C.fs_ioc_add_encryption_key64), uintptr(argKey.UnsafePtr()))
+        }
 	restorePrivs(savedPrivs)
 
 	log.Printf("FS_IOC_ADD_ENCRYPTION_KEY(%q, %s, <raw>) = %v", mount.Path, descriptor, errno)

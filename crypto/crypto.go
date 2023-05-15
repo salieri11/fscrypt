@@ -39,6 +39,7 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"io"
+	"log"
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/argon2"
@@ -189,6 +190,7 @@ func computeKeyDescriptorV2(key *Key) (string, error) {
 	if _, err := io.ReadFull(hkdf, h); err != nil {
 		return "", err
 	}
+        log.Printf("fcomputeKeyDescriptorV2 h=%q", hex.EncodeToString(h))
 	return hex.EncodeToString(h), nil
 }
 
