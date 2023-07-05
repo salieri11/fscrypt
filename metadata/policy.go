@@ -24,6 +24,7 @@ package metadata
 #include "../keyring/fscrypt_uapi.h"
 
 long long fs_ioc_get_encryption_policy_ex_restricted = FS_IOC_GET_ENCRYPTION_POLICY_EX_RESTRICTED;
+long long fs_ioc_set_encryption_policy_restricted = FS_IOC_SET_ENCRYPTION_POLICY_RESTRICTED;
 
 */
 import "C"
@@ -121,7 +122,12 @@ func getPolicyIoctl(file *os.File, request uintptr, arg unsafe.Pointer) error {
 }
 
 func setPolicy(file *os.File, arg unsafe.Pointer) error {
+	log.Printf("FS_IOC_SET_ENCRYPTION_KEY");
 	_, _, errno := unix.Syscall(unix.SYS_IOCTL, file.Fd(), unix.FS_IOC_SET_ENCRYPTION_POLICY, uintptr(arg))
+	if errno == unix.EINVAL {
+                log.Printf("FS_IOC_SET_ENCRYPTION_KEY_RESTRICTED");
+                _, _, errno = unix.Syscall(unix.SYS_IOCTL, file.Fd(), uintptr(C.fs_ioc_set_encryption_policy_restricted), uintptr(arg))
+        }
 	if errno != 0 {
 		return errno
 	}

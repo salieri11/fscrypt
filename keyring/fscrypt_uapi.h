@@ -75,6 +75,13 @@ struct fscrypt_policy_v2 {
 	__u8 master_key_identifier[FSCRYPT_KEY_IDENTIFIER_SIZE];
 };
 
+struct fscrypt_policy_arg {
+  union {
+    struct fscrypt_policy_v1 v1;
+    struct fscrypt_policy_v2 v2;
+  } policy;
+}; /* output */
+
 /* Struct passed to FS_IOC_GET_ENCRYPTION_POLICY_EX */
 struct fscrypt_get_policy_ex_arg {
 	__u64 policy_size; /* input/output */
@@ -167,6 +174,7 @@ struct fscrypt_get_key_status_arg {
 };
 
 #define FS_IOC_SET_ENCRYPTION_POLICY		_IOR('f', 19, struct fscrypt_policy_v1)
+#define FS_IOC_SET_ENCRYPTION_POLICY_RESTRICTED	_IOWR('f', 19, struct fscrypt_policy_arg)
 #define FS_IOC_GET_ENCRYPTION_PWSALT		_IOW('f', 20, __u8[16])
 #define FS_IOC_GET_ENCRYPTION_POLICY		_IOW('f', 21, struct fscrypt_policy_v1)
 #define FS_IOC_GET_ENCRYPTION_POLICY_EX		_IOWR('f', 22, __u8[9]) /* size + version */
