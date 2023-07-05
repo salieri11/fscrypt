@@ -199,7 +199,9 @@ func GetPolicy(path string) (*PolicyData, error) {
 	var arg unix.FscryptGetPolicyExArg
 	arg.Size = uint64(unsafe.Sizeof(arg.Policy))
 	policyPtr := util.Ptr(arg.Policy[:])
+	log.Printf("XXX calling FS_IOC_GET_ENCRYPTION_POLICY_EX")
 	err = getPolicyIoctl(file, unix.FS_IOC_GET_ENCRYPTION_POLICY_EX, unsafe.Pointer(&arg))
+	log.Printf("XXX 0")
         if err == unix.ERANGE {
 	  err = getPolicyIoctl(file, uintptr(C.fs_ioc_get_encryption_policy_ex_restricted), unsafe.Pointer(&arg))
 	}
@@ -208,6 +210,7 @@ func GetPolicy(path string) (*PolicyData, error) {
 		err = getPolicyIoctl(file, unix.FS_IOC_GET_ENCRYPTION_POLICY, policyPtr)
 		arg.Size = uint64(unsafe.Sizeof(unix.FscryptPolicyV1{}))
 	}
+	log.Printf("XXX 1")
 	switch err {
 	case nil:
 		break
@@ -219,8 +222,11 @@ func GetPolicy(path string) (*PolicyData, error) {
 		// ENOENT was returned instead of ENODATA on some filesystems before v4.11.
 		return nil, &ErrNotEncrypted{path}
 	default:
+		log.Printf("XXX default")
 		return nil, errors.Wrapf(err, "failed to get encryption policy of %q", path)
 	}
+	log.Printf("XXX 1")
+	log.Printf("arg.Size %d arg.Policy %q", arg.Size, hex.EncodeToString(arg.Policy[:]))
 	switch arg.Policy[0] { // arg.policy.version
 	case unix.FSCRYPT_POLICY_V1:
 		if arg.Size != uint64(unsafe.Sizeof(unix.FscryptPolicyV1{})) {
@@ -233,6 +239,7 @@ func GetPolicy(path string) (*PolicyData, error) {
 			// should never happen
 			return nil, errors.New("unexpected size for v2 policy")
 		}
+		log.Printf("XXX v2")
 		return buildV2PolicyData((*unix.FscryptPolicyV2)(policyPtr)), nil
 	default:
 		return nil, errors.Errorf("unsupported encryption policy version [%d]",
