@@ -128,6 +128,13 @@ func setPolicy(file *os.File, arg unsafe.Pointer) error {
                 log.Printf("FS_IOC_SET_ENCRYPTION_KEY_RESTRICTED");
                 _, _, errno = unix.Syscall(unix.SYS_IOCTL, file.Fd(), uintptr(C.fs_ioc_set_encryption_policy_restricted), uintptr(arg))
         }
+	// there is some code (e.g. CheckSupport) that calls this function with assumption that it will fail
+        // and return EINVAL.
+        // as a temp solution, we will return EINVAL if the restricted policy fails (and returns ENOTTY)
+        if errno == unix.ENOTTY {
+                log.Printf("returning EINVAL instead of ENOTTY")
+                return unix.EINVAL
+        }	
 	if errno != 0 {
 		return errno
 	}
